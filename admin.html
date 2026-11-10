@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>ATHX Race — Organisateur</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="athx.css">
+</head>
+<body>
+
+<!-- écran de code d'accès -->
+<div id="gate" class="wrap">
+  <div class="lock">
+    <div class="brand-name" style="font-size:38px">EastBox</div>
+    <div class="brand-sub" style="margin-bottom:26px">Espace organisateur</div>
+    <div class="card">
+      <h2>Code d'accès</h2>
+      <div class="hint" style="margin-bottom:14px">Cet espace permet de saisir les scores et de gérer la course.</div>
+      <form id="gateForm">
+        <input id="gatePin" type="password" autocomplete="off" placeholder="Code" style="text-align:center;letter-spacing:3px">
+        <button class="btn" type="submit" style="margin-top:14px;width:100%;justify-content:center">Entrer</button>
+      </form>
+      <div class="hint" id="gateMsg" style="color:#ff8e8d;min-height:18px"></div>
+    </div>
+    <div class="hint">Pour s'inscrire et suivre le classement : <a href="index.html" style="color:var(--cyan)">page des adhérents</a></div>
+  </div>
+</div>
+
+<div id="app" style="display:none">
+
+<header>
+  <div class="wrap hd">
+    <div>
+      <div class="brand-name">EastBox</div>
+      <div class="brand-sub">Espace organisateur · ATHX Race</div>
+    </div>
+    <div class="hd-right">
+      <div class="race-title">ATHX Race — Simulation</div>
+      <div class="race-date" id="raceDate">Course en équipe · 2 athlètes</div>
+      <div style="margin-top:8px"><span class="sync local" id="syncBox"><span class="dot"></span>Connexion…</span></div>
+    </div>
+  </div>
+</header>
+
+<nav>
+  <div class="wrap tabs">
+    <button class="tab active" data-p="scores">Saisie des scores</button>
+    <button class="tab" data-p="classement">Classement</button>
+    <button class="tab" data-p="inscription">Équipes &amp; vagues</button>
+    <button class="tab" data-p="wod">Le WOD</button>
+    <button class="tab" data-p="data">Données</button>
+  </div>
+</nav>
+
+<div class="wrap">
+
+<!-- ================ SCORES ================ -->
+<section class="panel active" id="p-scores">
+  <h2 class="sec">Saisie des scores</h2>
+  <div class="sec-sub">Choisis l'épreuve, puis filtre par vague pour saisir heat par heat</div>
+
+  <div class="filters">
+    <button class="chip on" data-part="A">Part A — Strength</button>
+    <button class="chip" data-part="B">Part B — Endurance</button>
+    <button class="chip" data-part="C">Part C — Metcon X</button>
+  </div>
+  <div class="filters" id="filtersWave"></div>
+  <div class="filters" id="filtersScores"></div>
+
+  <div id="scoreList"></div>
+  <div class="empty" id="scoreEmpty">Aucune équipe inscrite pour l'instant.</div>
+</section>
+
+<!-- ============== CLASSEMENT ============== -->
+<section class="panel" id="p-classement">
+  <div class="no-tv">
+    <h2 class="sec">Classement</h2>
+    <div class="sec-sub">Points = rang par épreuve dans la catégorie · le plus bas total gagne</div>
+    <div class="filters">
+      <button class="btn ghost sm" id="tvBtn">Mode écran TV</button>
+      <button class="btn ghost sm" id="printBtn">Imprimer</button>
+      <button class="btn ghost sm" id="csvBtn">Export CSV</button>
+    </div>
+  </div>
+  <div class="tvbar"><button class="btn sm" id="tvExit">Quitter le mode TV</button></div>
+  <div class="filters no-tv" id="rankMode"></div>
+  <div id="rankings"></div>
+</section>
+
+<!-- ============== ÉQUIPES ============== -->
+<section class="panel" id="p-inscription">
+  <h2 class="sec">Équipes &amp; vagues</h2>
+  <div class="sec-sub">5 équipes par vague · tu peux ajouter, corriger ou supprimer une équipe</div>
+
+  <div class="banner" id="cfgBanner" style="display:none"></div>
+
+  <div class="card">
+    <h3>Les vagues de départ</h3>
+    <div class="grid3" id="waveBoard"></div>
+  </div>
+
+  <div id="myTeam" style="display:none"></div>
+
+  <div id="formWrap">
+    <div class="card">
+      <h3 id="formTitle">Nouvelle équipe</h3>
+      <form id="teamForm">
+        <input type="hidden" id="editId">
+        <div class="grid2">
+          <div>
+            <label for="tName">Nom de l'équipe</label>
+            <input id="tName" required maxlength="40" placeholder="Ex. Les Rhinos">
+          </div>
+          <div>
+            <label for="tCat">Catégorie</label>
+            <select id="tCat" required>
+              <option value="LITE">LITE</option>
+              <option value="ATHX" selected>ATHX</option>
+              <option value="PRO">PRO</option>
+            </select>
+          </div>
+        </div>
+        <div style="margin-top:14px">
+          <label for="tWave">Vague de départ</label>
+          <select id="tWave" required></select>
+          <div class="hint">5 équipes maximum par vague.</div>
+        </div>
+        <div class="grid2" style="margin-top:14px">
+          <div>
+            <label for="aName">Athlète A</label>
+            <div class="split">
+              <input id="aName" required maxlength="40" placeholder="Prénom Nom">
+              <select id="aSex"><option value="M">Homme</option><option value="F">Femme</option></select>
+            </div>
+          </div>
+          <div>
+            <label for="bName">Athlète B</label>
+            <div class="split">
+              <input id="bName" required maxlength="40" placeholder="Prénom Nom">
+              <select id="bSex"><option value="M">Homme</option><option value="F">Femme</option></select>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:14px">
+          <label for="tNote">Note / contact</label>
+          <input id="tNote" maxlength="80" placeholder="Téléphone, remarque…">
+        </div>
+        <div class="duo-preview" id="duoPreview"></div>
+        <div class="row-actions" style="margin-top:18px">
+          <button type="submit" class="btn" id="submitBtn">Inscrire l'équipe</button>
+          <button type="button" class="btn ghost" id="cancelEdit" style="display:none">Annuler</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Équipes inscrites — <span id="teamCount">0</span></h3>
+    <div class="filters" id="filtersIns"></div>
+    <div class="tbl-wrap"><table id="teamTable">
+      <thead><tr><th>#</th><th>Équipe</th><th>Catégorie</th><th>Duo</th><th>Vague</th><th>Athlètes</th><th>Note</th><th></th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+    <div class="empty" id="teamEmpty">Aucune équipe inscrite pour le moment.</div>
+  </div>
+</section>
+
+<!-- ================= WOD ================= -->
+<section class="panel" id="p-wod">
+  <h2 class="sec">La course</h2>
+  <div class="sec-sub">3 épreuves · en paire · 3 catégories — LITE / ATHX / PRO · 3 duos — Hommes / Femmes / Mixte</div>
+
+  <div class="card">
+    <div class="wod"><div class="wod-t">Part A — Strength</div>
+      <div class="wod-s">Toutes catégories · 20 minutes</div></div>
+    <ul class="mv">
+      <li><b>0 → 6 min</b> : 1RM STRICT PRESS</li>
+      <li><b>6 → 12 min</b> : 3RM BACK SQUAT</li>
+      <li><b>12 → 20 min</b> : 5RM DEADLIFT</li>
+    </ul>
+    <div class="scorebox">Score — Charge totale soulevée par la paire (kg)</div>
+  </div>
+
+  <div class="rest"><span>Rest 10 min</span></div>
+
+  <div class="card">
+    <div class="wod"><div class="wod-t">Part B — Endurance</div>
+      <div class="wod-s">AMRAP 22 minutes</div></div>
+    <ul class="mv">
+      <li>Partner A : <b>RUN</b> — Partner B : <b>ROW</b></li>
+      <li>Athlete A démarre au RUN · Athlete B démarre au ROW</li>
+      <li>Swap à chaque fois que l'athlète termine sa distance de RUN :</li>
+    </ul>
+    <div class="catpill" style="margin-top:12px">
+      <span class="badge LITE">LITE · 500 m RUN</span>
+      <span class="badge ATHX">ATHX · 750 m RUN</span>
+      <span class="badge PRO">PRO · 1000 m RUN</span>
+    </div>
+    <div class="scorebox">Score — Distance totale couverte par la paire (m)</div>
+  </div>
+
+  <div class="rest"><span>Rest 10 min</span></div>
+
+  <div class="card">
+    <div class="wod"><div class="wod-t">Part C — Metcon X</div>
+      <div class="wod-s">For time · Time cap 25 minutes</div></div>
+    <div class="grid3" style="margin-top:14px" id="metconGrid"></div>
+    <div class="scorebox">Score — Temps de réalisation (time cap 25:00)</div>
+  </div>
+</section>
+
+<!-- ================ DATA ================= -->
+<section class="panel" id="p-data">
+  <h2 class="sec">Données de la course</h2>
+  <div class="sec-sub">Nom de l'épreuve, sauvegarde, remise à zéro</div>
+
+  <div class="card">
+    <h3>Nom &amp; date de l'épreuve</h3>
+    <div class="grid2">
+      <div><label for="evName">Nom affiché</label><input id="evName" placeholder="ATHX Race — Simulation"></div>
+      <div><label for="evDate">Date</label><input id="evDate" type="date"></div>
+    </div>
+    <div class="row-actions" style="margin-top:14px"><button class="btn sm" id="saveMeta">Enregistrer</button></div>
+  </div>
+
+  <div class="card">
+    <h3>Export / Import</h3>
+    <p class="hint" style="margin-bottom:14px">
+      Le fichier <b>.json</b> contient toutes les équipes et tous les scores. Exporte-le régulièrement
+      pendant la course : c'est ta sauvegarde si quoi que ce soit se passe mal.
+    </p>
+    <div class="row-actions">
+      <button class="btn" id="exportBtn">Exporter la course (.json)</button>
+      <button class="btn ghost" id="importBtn">Importer un fichier</button>
+      <input type="file" id="importFile" accept="application/json,.json" style="display:none">
+      <button class="btn danger" id="resetScores">Effacer les scores</button>
+      <button class="btn danger" id="resetAll">Tout remettre à zéro</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Jeu de démonstration</h3>
+    <p class="hint" style="margin-bottom:14px">6 équipes fictives avec des scores, pour tester l'affichage. À effacer avant la vraie course.</p>
+    <button class="btn ghost sm" id="demoBtn">Charger la démo</button>
+  </div>
+</section>
+
+<footer>EastBox · ATHX Race · Espace organisateur</footer>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>window.ATHX_MODE='admin';</script>
+<script src="config.js"></script>
+<script>
+(function(){
+  var KEY='athx_admin_ok';
+  var pin=(window.ATHX_CONFIG&&window.ATHX_CONFIG.adminPin)||'';
+  function open(){
+    document.getElementById('gate').style.display='none';
+    document.getElementById('app').style.display='block';
+    var s=document.createElement('script'); s.src='athx.js'; document.body.appendChild(s);
+  }
+  var ok=false;
+  try{ ok = sessionStorage.getItem(KEY)==='1'; }catch(e){}
+  if(!pin || ok){ open(); return; }
+  document.getElementById('gateForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    var v=document.getElementById('gatePin').value.trim();
+    if(v.toUpperCase()===String(pin).toUpperCase()){
+      try{ sessionStorage.setItem(KEY,'1'); }catch(err){}
+      open();
+    } else {
+      document.getElementById('gateMsg').textContent='Code incorrect.';
+      document.getElementById('gatePin').value='';
+    }
+  });
+  document.getElementById('gatePin').focus();
+})();
+</script>
+</body>
+</html>
