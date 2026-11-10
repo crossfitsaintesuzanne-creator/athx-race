@@ -10,5 +10,5 @@
    ============================================================ */
 window.ATHX_CONFIG = {
   dbUrl: "https://athx-race-default-rtdb.europe-west1.firebasedatabase.app/",
-  adminPin: "EASTBOX"
+  adminPin: "RON97114"
 };
