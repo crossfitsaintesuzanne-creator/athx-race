@@ -178,7 +178,7 @@ var Store = {
       var next = normalize(d);
       var ns = JSON.stringify(next);
       setSync('live');
-      if(ns !== sig()){ S = next; afterRemote(); }
+      if(ns !== sig()){ S = next; reapplyUnsaved(); afterRemote(); }
     }).catch(function(){ setSync('err'); });
   },
   putTeam:function(t){
@@ -261,6 +261,13 @@ function renderSync(){
     local: ['local','Hors ligne — cet appareil'],
     err  : ['err','Connexion perdue']
   };
+  var n = unsavedCount();
+  if(LIVE && n > 0 && syncState === 'err'){
+    el.className = 'sync err';
+    el.innerHTML = '<span class="dot"></span>'+n+' score'+(n>1?'s':'')+' non enregistré'+
+                   (n>1?'s':'')+' — nouvelle tentative…';
+    return;
+  }
   var m = map[syncState] || map.local;
   el.className = 'sync '+m[0];
   el.innerHTML = '<span class="dot"></span>'+m[1];
@@ -504,12 +511,32 @@ function cardFor(t){
 
 /* écriture différée : on ne pousse qu'après une courte pause de frappe */
 var pending = {};
+var unsaved = {};   /* scores saisis mais pas encore confirmés par la base */
+
 function queueWrite(teamId, part){
   var k = teamId+'|'+part;
+  unsaved[k] = (S.scores[teamId]||{})[part] || {};
   clearTimeout(pending[k]);
-  pending[k] = setTimeout(function(){
-    Store.putScore(teamId, part, (S.scores[teamId]||{})[part] || {});
-  }, 500);
+  pending[k] = setTimeout(function(){ flushOne(k); }, 500);
+}
+function flushOne(k){
+  var p = k.split('|'), teamId = p[0], part = p[1];
+  var obj = (S.scores[teamId]||{})[part] || {};
+  unsaved[k] = obj;
+  if(!LIVE){ delete unsaved[k]; saveLocal(); renderSync(); return Promise.resolve(); }
+  return api('/scores/'+teamId+'/'+part,'PUT',obj).then(function(){
+    delete unsaved[k]; setSync('live'); renderSync();
+  }).catch(function(){ setSync('err'); renderSync(); });
+}
+function flushAll(){ Object.keys(unsaved).forEach(flushOne); }
+function unsavedCount(){ return Object.keys(unsaved).length; }
+/* une relecture de la base ne doit jamais écraser une saisie non enregistrée */
+function reapplyUnsaved(){
+  Object.keys(unsaved).forEach(function(k){
+    var p = k.split('|'), id = p[0], part = p[1];
+    if(!S.scores[id]) S.scores[id] = {};
+    S.scores[id][part] = unsaved[k];
+  });
 }
 function athxSetA(id,k,v){
   if(!S.scores[id]) S.scores[id]={}; if(!S.scores[id].A) S.scores[id].A={};
@@ -796,6 +823,8 @@ function start(){
     refresh();
     Store.pull().then(function(){ refresh(); });
     setInterval(function(){ Store.pull(); }, POLL_MS);
+    setInterval(function(){ if(unsavedCount()) flushAll(); }, 5000);
+    window.addEventListener('online', flushAll);
   } else {
     var raw = lsGet(LS_KEY);
     if(raw){ try{ S = normalize(JSON.parse(raw)); }catch(e){ S = blank(); } }
@@ -806,6 +835,9 @@ function start(){
   }
   document.addEventListener('keydown', function(e){
     if(e.key==='Escape') document.body.classList.remove('tv');
+  });
+  window.addEventListener('beforeunload', function(e){
+    if(MODE==='admin' && unsavedCount()){ e.preventDefault(); e.returnValue=''; }
   });
 }
 
